@@ -12,12 +12,12 @@ npm install --save express body-parser
 node index
 
 ### Run at GCloud
-create file app.yaml
+create file app.yaml  
 make sure has this script `"start": "node index.js"` in package.json. example below :
 ```
 "scripts": {
     "start": "node index.js",
   },
 ```
-cd piep
+cd piep  
 ~/piep $ gcloud app deploy app.yaml
