@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Levenshtein</title>
+
+  <link rel="stylesheet" href="./scripts/tabulator-tables/dist/css/tabulator.min.css">
+  <link rel="stylesheet" href="./scripts/@fortawesome/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="./scripts/admin-lte/dist/css/adminlte.min.css">
+
+  <style>
+    .nav-link.active{
+		background-color: #343a40!important;
+		color: #fff!important;
+		border: 1px solid;
+		border-radius: 15px;
+	}
+  </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <nav class="main-header navbar" style="background-color:#f4f6f9;border-bottom:none;">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <!-- <a class="nav-link" data-widget="pushmenu" href="#" role="button"></a> -->
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="index.html" class="brand-link">
+      <img src="devoteam_logo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">Levenshtein</span>
+    </a>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="info">
+          <a href="" class="d-block">Wildan Putra</a>
+        </div>
+      </div>
+
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+          <li class="nav-header"><h6>PARSER</h6></li>
+          <li class="nav-item menu-open">
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="database.html" class="nav-link active">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Database</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="documents.html" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Documents</p>
+                </a>
+              </li>
+              <br/>
+              <li class="nav-header">ADMINSTRATION</li>
+              <li class="nav-item">
+                <a href="user_management.html" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>User Management</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+
+    <section class="content">
+		<div class="container-fluid">
+
+		  <div class="row mb-3">
+			<div class="col-12 col-sm-6 col-md-3">
+				<label>Type:</label>
+				<select id="type" name="type" onchange="emptyData()" class="form-control form-control-sm pr-5">
+					<option value="emk" selected="">EMK</option>
+					<option value="mln">MLN</option>
+					<option value="ohd">OHD</option>
+					<option value="wq">WQ</option>
+				</select>
+			</div>
+		  </div>
+		  
+		  <div class="row mb-3">
+			<div class="col-12">
+				<label>Date Range:</label>
+				<input type="date" id="start_date" name="start_date" value="2021-01-02" class="mr-1 pl-2 pr-2">
+				<input type="date" id="end_date" name="end_date" value="2021-01-03" class="mr-1 pl-2 pr-2">
+				<input type="submit" onclick="submit()" value="Submit">
+			</div>
+		  </div>
+
+		  <div class="row mb-3">
+			<div class="col-12">
+				<input type="submit" onclick="updateDatabase()" value="Update Database">
+			</div>
+		  </div>
+
+		  <div class="row">
+			<div class="col-12">
+				<div id="piep-table"></div>
+			</div>
+		  </div>
+		</div>
+	</section>
+	
+  </div>
+  <!-- /.content-wrapper -->
+  <footer class="main-footer">
+    Copyright &copy; 2014-2021 Devoteam.
+    All rights reserved.
+  </footer>
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+  </aside>
+  <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<script src="./scripts/jquery/dist/jquery.min.js"></script>
+<script src="./scripts/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="./scripts/admin-lte/dist/js/adminlte.min.js"></script>
+<script src="/scripts/tabulator-tables/dist/js/tabulator.min.js"></script>
+<script src="./scripts/sweetalert2/dist/sweetalert2.all.min.js"></script>
+
+<script>
+	var dataChanges = [];
+    var table = new Tabulator("#piep-table", {
+        layout:"fitColumns",
+        height:300,
+        placeholder:"Data not found",
+        pagination:true,
+        paginationSize:20,
+    });
+
+	function emptyData(){
+		table.setColumns([]);
+		table.replaceData([]);
+		dataChanges = [];
+	}
+	
+	function submit()
+	{
+		var type = document.getElementById('type').value;
+		var start_date = document.getElementById('start_date').value;
+		var end_date = document.getElementById('end_date').value;
+		var body = {
+			"type": type,
+			"start_date": start_date,
+			"end_date": end_date
+		};
+
+		$.post("/database_list", body, function(data, status){
+			var col = [];
+			var i = 0;
+			(JSON.parse(data).payload).forEach(function (arrayItem) {
+				if (i == 0){
+					for (var key in arrayItem) {
+						var t = convertCamelCase(key);
+						if (i == 0){}
+						//freeze column id
+						else if (i == 1){
+							var obj = {title:t, field:key, frozen:true, width:100};
+							col.push(obj);
+						}
+						else if (i == 2 || i == 3){
+							var obj = {title:t, field:key, width:130};
+							col.push(obj);
+						}
+						else {
+							var obj = {title:t, field:key, editor:"input", width:200,
+								cellEdited:function(cell){
+									var data = cell.getRow().getData();
+									
+									var t = $('#type').val();
+									var d = data.date;
+									var f_name = cell.getField();
+									var old_value = (cell.getOldValue()==null?"":cell.getOldValue().toString());
+									var new_value = (cell.getValue()==null?"":cell.getValue().toString());
+									
+									if (new_value == old_value){}
+									//else if ((typeof old_value) == 'string'){}
+									// else if (!isNumeric(new_value) && new_value != ''){
+									// 	Swal.fire({
+									// 		position: 'top-end',
+									// 		icon: 'error',
+									// 		title: 'Data must number !',
+									// 		showConfirmButton: false,
+									// 		timer: 700
+									// 	}).then((result) => {
+									// 		cell.restoreOldValue();
+									// 	});
+									// }
+									else confPopUp(t, d, cell.getField(), old_value, cell.getValue(), cell);
+								},
+							};
+							col.push(obj);
+						}
+						i++;
+					}
+				}
+			});
+			
+			table.setColumns(col);
+			table.replaceData(JSON.parse(data).payload);
+			table.setPage(1);
+		});
+	};
+
+	function isNumeric(str) {
+		if (typeof str != "string") return false;
+		return !isNaN(str) && !isNaN(parseFloat(str))
+	}
+	
+	function confPopUp(t, d, f_name, old_value, new_value, cell){
+		var oldVal = (old_value.length > 25 ? old_value.substring(0,30) + ' ...' : old_value);
+		var newVal = (new_value.length > 25 ? new_value.substring(0,30) + ' ...' : new_value);
+		Swal.fire({
+			position: 'top',
+			title: 'Are you sure?',
+			html: '<center><table style="text-align:left">'
+				+ '<tr><td class="pr-5">Change Data </td><td>: <b>' + f_name +'</b></td></tr>'
+				+ '<tr><td>Before </td><td>: <b>'+(oldVal==""?"null":oldVal) + '</b></td></tr>'
+				+ '<tr><td>After </td><td>: <b>'+(newVal==""?"null":newVal) + '</b></td></tr></table></center>',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#3085d6',
+			cancelButtonColor: '#d33',
+			confirmButtonText: 'Save Changes'
+		}).then((result) => {
+			if (result.isConfirmed) {
+				var obj = {"type":t, "date":d, "f_name":f_name, "value":new_value};
+				dataChanges.push(obj);
+
+				Swal.fire({
+					position: 'top-end',
+					icon: 'success',
+					title: 'Data has been save',
+					showConfirmButton: false,
+					timer: 700
+				});
+			}
+			else cell.restoreOldValue();
+		});
+	}
+
+	function updateDatabase(){
+		var body = {
+			"data": JSON.stringify(dataChanges),
+			"date": formatDate(Date.now())
+		};
+
+		$.post("/database_update", body, function(data, status){
+			alert(JSON.parse(data).message);
+		});
+	}
+
+	function convertCamelCase(str){
+		return str
+			// insert a space before all caps
+			.replace(/([A-Z])/g, ' $1')
+			// uppercase the first character
+			.replace(/^./, function(str){ return str.toUpperCase(); })
+		;
+	}
+
+	function formatDate(date) {
+		var d = new Date(date),
+			month = '' + (d.getMonth() + 1),
+			day = '' + d.getDate(),
+			year = d.getFullYear(),
+			hour = d.getHours(),
+			minutes = d.getMinutes(),
+			seconds = d.getSeconds();
+
+		if (month.length < 2) month = '0' + month;
+		if (day.length < 2) day = '0' + day;
+		if (hour.length < 2) hour = '0' + day;
+		if (minutes.length < 2) minutes = '0' + day;
+		if (seconds.length < 2) seconds = '0' + day;
+
+		return [year, month, day].join('-') + ' ' + [hour, minutes, seconds].join(':');
+	}
+</script>
+
+</body>
+</html>
