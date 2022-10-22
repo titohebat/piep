@@ -1,10 +1,10 @@
 const { Client } = require('pg');
 const client = new Client({
-  user: "extraction",
-  host: "34.101.122.219",
-  database: "piep",
-  password: "QJHxaBEyRLjt123",
-  port: 5432,
+  user: "11",
+  host: "1111",
+  database: "11",
+  password: "1",
+  port: 11,
 });
 client.connect(function(err) {
   if (err) throw err;
